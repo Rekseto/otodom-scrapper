@@ -19,6 +19,8 @@
     "koa-cors": "0.0.16",
     "koa-morgan": "^1.0.1",
     "koa-router": "^7.4.0",
+    "mongoose": "^5.5.14",
+    "node-cron": "^2.0.3",
     "node-fetch": "^2.6.0",
     "querystring": "^0.2.0",
     "ramda": "^0.26.1",

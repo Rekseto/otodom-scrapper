@@ -56,6 +56,7 @@ class Database {
           DATABASE_NAME
         } = this.config;
 
+        // @TODO protect database with user and password
         this.mongoose.connect(
           `mongodb://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}`,
           {
