@@ -32,7 +32,8 @@ const filtersFunctions = {
 };
 
 const buildURL = (filters, page = 1) => {
-  let url = `${rootDomain}sprzedaz/mieszkanie/${filters.city}/?`;
+  // prettier-ignore
+  let url = `${rootDomain}sprzedaz/${placeTypeFilter(filters.placeType)}/${filters.city}/?`;
 
   Object.keys(filters).forEach(filterName => {
     if (filtersFunctions[`${filterName}Filter`]) {
