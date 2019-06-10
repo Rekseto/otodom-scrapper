@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
-const callDir = require("call-dir");
+const fs = require("fs");
 const path = require("path");
+const {promisify} = require("util");
 
 /**
  * @class   {Database}
@@ -100,11 +101,20 @@ class Database {
 
   async startDatabase(dependencies) {
     try {
-      callDir.default(path.resolve(__dirname, "./api/models"), src => {
-        this.load(require(src)(this.mongoose));
-      });
+      const modelsFiles = await promisify(fs.readdir)(
+        path.resolve(__dirname, "./api/models")
+      );
+
+      for (const modelFile of modelsFiles) {
+        const model = require(path.resolve(
+          __dirname,
+          "./api/models",
+          modelFile
+        ));
+        this.load(model(this.mongoose));
+      }
     } catch (error) {
-      this.logger.critical(error.message);
+      this.logger.error(error.message);
       throw error;
     }
     await this.connect();
