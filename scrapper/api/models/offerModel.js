@@ -5,7 +5,9 @@ module.exports = function(mongoose) {
     price: {type: Number},
     pricePerM: {type: Number},
     area: {type: Number},
-    rooms: {type: Number}
+    rooms: {type: Number},
+    otoDomId: {type: String, unique: true},
+    link: {type: String}
     // @TODO addtional infos
   });
 
