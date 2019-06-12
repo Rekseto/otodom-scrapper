@@ -8,8 +8,12 @@ const path = require("path");
 const chalk = require("chalk");
 const fs = require("fs");
 const {promisify} = require("util");
+const R = require("ramda");
 
 const {setupLogger} = require("./logger");
+const CronManager = require("./CronManager");
+const ConfigurationManager = require("./ConfigurationManager");
+const Database = require("./Database");
 const errorMiddleware = require("./api/middlewares/errorMiddleware");
 
 // paths
@@ -20,9 +24,17 @@ const servicesPath = path.resolve(__dirname, "./api/services");
 async function startServer() {
   const logger = setupLogger("test");
 
+  const database = new Database(process.env, {logger});
+  await database.startDatabase();
+
+  const configurationManager = new ConfigurationManager({logger, database});
+  await configurationManager.initializeConfiguration();
+  const {configuration} = configurationManager;
+
   // Http module configuration
   const router = new Router();
   const http = new Koa();
+  const cronManager = new CronManager();
 
   const services = {};
 
@@ -30,8 +42,18 @@ async function startServer() {
 
   for (const serviceFile of servicesFiles) {
     const creator = require(path.resolve("./api/services", serviceFile));
-    services[creator.name] = creator({logger});
+    services[creator.name] = creator({logger, database, configurationManager});
   }
+
+  services.offersServices.fetchOffers(configuration);
+
+  cronManager.registerNewTask(configuration.scrapInterval, () => {
+    logger.info("Scrapping has been started");
+
+    const {offersServices} = services;
+
+    offersServices.fetchOffers(configuration);
+  });
 
   http.use(
     morgan(function(tokens, req, res) {
@@ -54,7 +76,9 @@ async function startServer() {
 
   //
 
-  callDir.loadAll(routes, rPath => require(rPath)(router, {logger, services}));
+  callDir.loadAll(routes, rPath =>
+    require(rPath)(router, {logger, services, database})
+  );
 
   // Everything's loaded so we can start our http module
   http.listen(process.env.BACKEND_PORT || 3000);
