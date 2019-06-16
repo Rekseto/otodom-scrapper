@@ -40,7 +40,7 @@ class ConfigurationManager {
       });
 
       if (configuration) {
-        this.configuration = configuration;
+        this.configuration = configuration.toObject();
         return;
       }
 
@@ -49,11 +49,11 @@ class ConfigurationManager {
       });
 
       if (defConf) {
-        this.configuration = defConf;
+        this.configuration = defConf.toObject();
         return;
       }
 
-      this.configuration = await this.createDefaultConfiguration();
+      this.configuration = await this.createDefaultConfiguration().toObject();
     } catch (error) {
       this.logger.error(error.message);
       this.configuration = defaultConfiguration;
@@ -73,7 +73,7 @@ class ConfigurationManager {
       nextConfiguration.actual = true;
 
       await Promise.all([actualConfiguration.save, nextConfiguration.save]);
-      this.configuration = nextConfiguration;
+      this.configuration = nextConfiguration.toObject();
     }
   }
 
