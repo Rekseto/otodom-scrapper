@@ -1,0 +1,28 @@
+version: "3.3"
+services:
+  mongo:
+    restart: always
+    image: mongo
+    volumes:
+      - /otodom_scrapper-db-volume:/db
+    ports:
+      - "27017:27017"
+  scrapper:
+    build: ./scrapper/
+    tty: true
+    volumes:
+      - /otodom_scrapper-log-volume:/otodom_scrapperLogs
+    env_file:
+      - ./scrapper/.env
+    environment:
+      WAIT_HOSTS: mongo:27017
+    command: ["npm", "run", "dev"]
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongo
+    links:
+      - mongo
+volumes:
+  otodom_scrapper-db-volume:
+  otodom_scrapper-log-volume:
