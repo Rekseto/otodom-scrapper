@@ -45,14 +45,13 @@ async function startServer() {
     services[creator.name] = creator({logger, database, configurationManager});
   }
 
-  services.offersServices.fetchOffers(configuration);
+  const {offersServices} = services;
+
+  offersServices.scrapOffers(configuration);
 
   cronManager.registerNewTask(configuration.scrapInterval, () => {
     logger.info("Scrapping has been started");
-
-    const {offersServices} = services;
-
-    offersServices.fetchOffers(configuration);
+    offersServices.scrapOffers(configuration);
   });
 
   http.use(
@@ -77,7 +76,7 @@ async function startServer() {
   //
 
   callDir.loadAll(routes, rPath =>
-    require(rPath)(router, {logger, services, database})
+    require(rPath)(router, {logger, services, database, configurationManager})
   );
 
   // Everything's loaded so we can start our http module
