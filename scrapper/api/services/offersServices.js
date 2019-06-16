@@ -23,33 +23,38 @@ const getPropertyNameByClass = classList => {
   return "";
 };
 
-async function scrapOffers(document) {
-  const offers = [];
-  const offersList = document.querySelectorAll(".params");
+module.exports = function offersServices({logger, database}) {
+  const {offerModel} = database.models;
 
-  offersList.forEach(offer => {
-    const offerArticle = offer.parentElement.parentElement;
-    const offerDetails = {
-      id: offerArticle.getAttribute("data-item-id"),
-      link: offerArticle.getAttribute("data-url")
-    };
-    offer.childNodes.forEach(param => {
-      if (param && param.className) {
-        const property = getPropertyNameByClass(param.className.split(" "));
-        offerDetails[property] = param.textContent
-          .split(" ")
-          .join("")
-          .replace(/\D/g, "");
-      }
-    });
-    offers.push(offerDetails);
-  });
-  return offers;
-}
-
-module.exports = function offersServices({logger}) {
   return {
-    async fetchOffers(args) {
+    async saveOffer(offer) {
+      try {
+        const result = await offerModel.create({
+          ...offer,
+          sent: 0
+        });
+
+        if (result) return result;
+        else return null;
+      } catch (error) {
+        logger.error(error);
+        return null;
+      }
+    },
+    async findOffer(id) {
+      try {
+        const data = await offerModel.findOne({
+          otoDomId: id
+        });
+
+        if (data) return data;
+        else return null;
+      } catch (error) {
+        logger.error(error.message);
+        return null;
+      }
+    },
+    async scrapOffers(args) {
       let pages = 2;
 
       const offersLists = [];
@@ -66,14 +71,65 @@ module.exports = function offersServices({logger}) {
           const pagesFromDom = Number.parseInt(pagesFromDomString);
 
           if (pagesFromDom !== pages) pages = pagesFromDom;
+
         }
 
-        const offerList = await scrapOffers(document);
+        const offerList = await this.extractOffers(document);
         offersLists.push(offerList);
-        await delay(5000);
+
+        await delay(500);
       }
 
       return R.flatten(offersLists);
+    },
+
+    async extractOffers(document) {
+      const offers = [];
+      const offersList = document.querySelectorAll(".offer-item");
+
+      for (let i = 0; i < offersList.length; i++) {
+        const offer = offersList[i];
+        const offerId = offer.getAttribute("data-item-id");
+        const offerInCache = await this.findOffer(offerId);
+        if (offerInCache === null) {
+          const offerDetails = {
+            otoDomId: offerId,
+            link: offer.getAttribute("data-url")
+          };
+
+          for (const param of offer.querySelector(".params").childNodes) {
+            if (param && param.className) {
+              const property = getPropertyNameByClass(
+                param.className.split(" ")
+              );
+              offerDetails[property] = param.textContent
+                .split(" ")
+                .join("")
+                .replace(/\D/g, "");
+            }
+          }
+
+          await this.saveOffer(offerDetails);
+          offers.push(offerDetails);
+        }
+      }
+
+      return offers;
+    },
+
+    async getCheapestOffers(limit = 10) {
+      try {
+        const data = await offerModel
+          .find({
+            sent: 0
+          })
+          .sort("price")
+          .limit(limit)
+          .exec();
+        return data;
+      } catch (error) {
+        throw error;
+      }
     }
   };
 };
