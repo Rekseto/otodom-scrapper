@@ -1,0 +1,14 @@
+<main>
+  <h1>Oto lista nowych ofert</h1>
+
+  <ul class="offers offers-cheapest">
+    {{#each cheapestOffers }}
+    <li>
+      <div>
+        <h2>{{this.link}}</h2>
+        <p>{{this.price}} zł</p>
+      </div>
+    </li>
+    {{/each}}
+  </ul>
+</main>

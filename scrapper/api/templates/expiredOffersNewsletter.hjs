@@ -1,0 +1,14 @@
+<main>
+  <h1>Wygasły następujące oferty</h1>
+
+  <ul class="offers offers-cheapest">
+    {{#each expired }}
+    <li>
+      <div>
+        <h2>{{this.link}}</h2>
+        <p>{{this.price}} zł</p>
+      </div>
+    </li>
+    {{/each}}
+  </ul>
+</main>
