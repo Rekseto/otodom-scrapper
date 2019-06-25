@@ -9,7 +9,9 @@ module.exports = function(mongoose) {
     placeType: {type: String},
     mailInterval: {type: String},
     scrapInterval: {type: String},
-    actual: {type: Boolean, required: true}
+    actual: {type: Boolean, required: true},
+    email: {type: String, required: true},
+    clearDatabaseInterval: {type: String, required: true}
   });
 
   return {schema: configurationModel, modelName: "configurationModel"};
