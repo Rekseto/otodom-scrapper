@@ -8,10 +8,10 @@ const path = require("path");
 const chalk = require("chalk");
 const fs = require("fs");
 const {promisify} = require("util");
-const R = require("ramda");
 
 const {setupLogger} = require("./logger");
 const CronManager = require("./CronManager");
+const GoogleProvider = require("./GoogleProvider");
 const ConfigurationManager = require("./ConfigurationManager");
 const Database = require("./Database");
 const errorMiddleware = require("./api/middlewares/errorMiddleware");
@@ -36,23 +36,35 @@ async function startServer() {
   const http = new Koa();
   const cronManager = new CronManager();
 
+  const googleProvider = new GoogleProvider();
+  await googleProvider.initialize();
+
   const services = {};
 
   const servicesFiles = await promisify(fs.readdir)(servicesPath);
 
   for (const serviceFile of servicesFiles) {
     const creator = require(path.resolve("./api/services", serviceFile));
-    services[creator.name] = creator({logger, database, configurationManager});
+    services[creator.name] = creator({
+      logger,
+      database,
+      configurationManager,
+      googleProvider
+    });
   }
 
-  const {offersServices} = services;
+  const scriptsFiles = await promisify(fs.readdir)(servicesPath);
 
-  offersServices.scrapOffers(configuration);
+  for (const scriptFile of scriptsFiles) {
+    const script = require(path.resolve("./scripts", scriptFile));
 
-  cronManager.registerNewTask(configuration.scrapInterval, () => {
-    logger.info("Scrapping has been started");
-    offersServices.scrapOffers(configuration);
-  });
+    await script({
+      logger,
+      database,
+      configurationManager,
+      googleProvider
+    });
+  }
 
   http.use(
     morgan(function(tokens, req, res) {
