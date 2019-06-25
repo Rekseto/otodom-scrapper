@@ -19,7 +19,7 @@ function errorMiddleware({logger}) {
         }
       });
 
-      logger.error(error);
+      logger.error(error.message);
 
       ctx.status = error.httpStatus;
 
