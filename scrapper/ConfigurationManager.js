@@ -5,8 +5,10 @@ const defaultConfiguration = {
   city: "poznan",
   placeType: "flat",
   mailInterval: "0 6 * * *",
+  clearDatabaseInterval: "0 0 * * 1,5",
   scrapInterval: "0 0 * * *",
-  actual: true
+  actual: true,
+  email: "ReksetoAjxer@gmail.com"
 };
 
 class ConfigurationManager {
