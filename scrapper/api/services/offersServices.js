@@ -130,6 +130,22 @@ module.exports = function offersServices({logger, database}) {
       } catch (error) {
         throw error;
       }
+    },
+    async deleteExpiredOffers() {
+      const offers = await offerModel.find({});
+
+      const result = [];
+
+      for (const offer of offers) {
+        const response = await fetch(offer.link);
+
+        if (response.redirected) {
+          result.push(offer.toObject());
+          await offer.remove();
+        }
+      }
+
+      return result;
     }
   };
 };
