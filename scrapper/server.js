@@ -20,6 +20,7 @@ const errorMiddleware = require("./api/middlewares/errorMiddleware");
 
 const routes = path.resolve(__dirname, "./api/routes");
 const servicesPath = path.resolve(__dirname, "./api/services");
+const scriptsPath = path.resolve(__dirname, "./scripts");
 
 async function startServer() {
   const logger = setupLogger("test");
@@ -29,7 +30,6 @@ async function startServer() {
 
   const configurationManager = new ConfigurationManager({logger, database});
   await configurationManager.initializeConfiguration();
-  const {configuration} = configurationManager;
 
   // Http module configuration
   const router = new Router();
@@ -53,15 +53,17 @@ async function startServer() {
     });
   }
 
-  const scriptsFiles = await promisify(fs.readdir)(servicesPath);
+  const scriptsFiles = await promisify(fs.readdir)(scriptsPath);
 
   for (const scriptFile of scriptsFiles) {
     const script = require(path.resolve("./scripts", scriptFile));
 
     await script({
+      services,
       logger,
       database,
       configurationManager,
+      cronManager,
       googleProvider
     });
   }
