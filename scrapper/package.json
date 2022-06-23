@@ -15,7 +15,7 @@
     "chalk": "^2.4.2",
     "googleapis": "^40.0.0",
     "handlebars": "^4.1.2",
-    "jsdom": "^15.1.1",
+    "jsdom": "^16.5.0",
     "koa": "^2.7.0",
     "koa-body": "^4.1.0",
     "koa-cors": "0.0.16",
